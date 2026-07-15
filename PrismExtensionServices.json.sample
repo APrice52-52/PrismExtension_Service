@@ -1,0 +1,15 @@
+{
+  "DbServer": "localhost",
+  "DbPort": 3306,
+  "DbUsername": "prism",
+  "DbPasswordJson": "",
+  "ServicePort": 5200,
+  "LogExpiryDays": 30,
+  "LogDebugMessages": false,
+  "PluginsFolder": "plugins",
+  "Plugins": {
+    "AAAAAAAAAAAAAAAAAAAA": {
+      "Note": "Replace key with the actual 20-char Base-36 plugin Id"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PrismExtensionServices/PrismExtensionServices.csproj" />
+  <Project Path="PrismExtensionServices.Shared/PrismExtensionServices.Shared.csproj" />
+</Solution>
