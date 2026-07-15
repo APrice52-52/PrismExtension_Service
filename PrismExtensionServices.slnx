@@ -4,4 +4,5 @@
   </Folder>
   <Project Path="PrismExtensionServices.Shared/PrismExtensionServices.Shared.csproj" />
   <Project Path="PrismExtensionServices/PrismExtensionServices.csproj" />
+  <Project Path="SoCancelFeePlugin/SoCancelFeePlugin.csproj" />
 </Solution>
