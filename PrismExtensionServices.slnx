@@ -1,4 +1,7 @@
 <Solution>
-  <Project Path="PrismExtensionServices/PrismExtensionServices.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path="prism-extension-services.conf" />
+  </Folder>
   <Project Path="PrismExtensionServices.Shared/PrismExtensionServices.Shared.csproj" />
+  <Project Path="PrismExtensionServices/PrismExtensionServices.csproj" />
 </Solution>

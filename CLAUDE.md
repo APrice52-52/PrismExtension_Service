@@ -46,18 +46,23 @@ Two-project solution:
 
 ## Configuration
 
+`PrismExtensionServicesConfig` lives in `PrismExtensionServices/Configuration/` (host project only — plugins do not reference it). It mirrors the `StyleViewConfig` pattern from the StyleViewService project.
+
 Live config: `C:\ProgramData\Price Point IT\PrismExtensionServices\PrismExtensionServices.json`
 Solution reference copy: `PrismExtensionServices.json.sample`
 
-Key fields:
+Static folder-path properties (computed from `%CommonApplicationData%` at class-init time): `AppDataFolder`, `ConfigFolder`, `ConfigFileName`, `LogFolder`.
+
+Key instance fields:
 | Field | Notes |
 |---|---|
-| `DbPasswordJson` | DPAPI-encrypted Base-64 (`LocalMachine` scope) — same pattern as `StyleViewConfig.DbPasswordJson` |
-| `ServicePort` | Kestrel listen port (overrides `launchSettings.json` in production) |
+| `DbPassword` | Plain-text (`[JsonIgnore]`) — set this directly in code or via `DbPasswordJson` |
+| `DbPasswordJson` | DPAPI-encrypted Base-64 (`LocalMachine` scope, entropy `{ 7, 42, 183, 61, 200 }`) — this is what is persisted in the JSON file |
+| `ServicePort` | Kestrel listen port |
 | `PluginsFolder` | Relative paths resolve from `AppContext.BaseDirectory`; defaults to `plugins/` |
-| `Plugins` | `Dictionary<string, JsonElement>` keyed by the plugin's 20-char Base-36 `Id` |
+| `Plugins` | `Dictionary<string, JsonElement>` keyed by plugin's 20-char Base-36 `Id` |
 
-Default config sources are **cleared** in `Program.cs`; `appsettings.json` is not read at runtime. Override values with `PRISM_` prefixed environment variables.
+Config is loaded via `PrismExtensionServicesConfig.Load()` in `Program.cs` — no ASP.NET Core configuration pipeline involved. `Load`/`Save` both include a 1-second retry on file contention.
 
 ## Plugin Development
 
