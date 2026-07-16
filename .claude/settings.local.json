@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp:*)",
+      "Bash(where mcp-mysql-server:*)",
+      "Bash(mysql:*)",
+      "Bash(dotnet:*)",
+      "Bash(echo:*)",
+      "Bash(MYSQL_HOST=w10c2 MYSQL_PORT=3306 MYSQL_USER=root MYSQL_PASS=PpitAdm MYSQL_DB=rpsods mcp-mysql:*)",
+      "Bash(MYSQL_HOST=w10c2 MYSQL_PORT=3306 MYSQL_USER=root MYSQL_PASS=PpitAdm MYSQL_DB=rpsods mysql:*)",
+      "Bash(node:*)"
+    ]
+  }
+}

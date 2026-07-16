@@ -1,0 +1,34 @@
+name: Publish Shared Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Pack
+        run: |
+          dotnet pack PrismExtensionServices.Shared/PrismExtensionServices.Shared.csproj \
+            -c Release \
+            -p:Version=${GITHUB_REF_NAME#v} \
+            -o ./nupkg
+
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source "https://nuget.pkg.github.com/PricePointIT/index.json" \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate

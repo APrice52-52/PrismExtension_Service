@@ -41,9 +41,12 @@ public class SoCancelFeesController : ControllerBase
 
 
     [HttpPost("cancelorder")]
-    public async Task<IActionResult> CancelSo([FromQuery] long soSid, [FromBody] CancellationMessage message)
+    public async Task<IActionResult> CancelSo(
+                            [FromQuery] long soSid, 
+                            [FromBody] CancellationMessage message
+        )
     {
-        throw new NotImplementedException();
+        return Ok("Cancelled Order");
     }
 
 
@@ -52,6 +55,7 @@ public class SoCancelFeesController : ControllerBase
     private async Task<OrderBalance?> GetSoBalanceInternal(long soSid) {
         try {
 
+            return null;
             using var connection = _db.GetConnection();
             await connection.OpenAsync();
 

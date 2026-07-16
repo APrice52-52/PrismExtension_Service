@@ -23,4 +23,11 @@ internal sealed class DbHelper : IDbHelper
         };
         return new MySqlConnection(cs.ConnectionString);
     }
+
+
+    public async Task<MySqlConnection> GetOpenConnectionAsync() {
+        var connection = GetConnection();
+        await connection.OpenAsync();
+        return connection;
+    }
 }
