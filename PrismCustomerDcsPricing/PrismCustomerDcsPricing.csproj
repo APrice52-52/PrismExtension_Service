@@ -21,12 +21,9 @@
     </PropertyGroup>
     <ItemGroup>
       <!-- Copy plugin output but exclude the shared contract assembly — the host already provides it -->
-      <PluginOutput Include="$(OutputPath)*.*"
-                    Exclude="$(OutputPath)PrismExtensionServices.Shared.*" />
+      <PluginOutput Include="$(OutputPath)*.*" Exclude="$(OutputPath)PrismExtensionServices.Shared.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(PluginOutput)"
-          DestinationFolder="$(HostPluginsDir)"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PluginOutput)" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
