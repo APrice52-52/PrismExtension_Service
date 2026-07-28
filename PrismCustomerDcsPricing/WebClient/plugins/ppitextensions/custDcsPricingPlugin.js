@@ -23,7 +23,7 @@ function (ModelEvent, psInfo, $http, docData) {
         $http.get(apiBase + '/CustomerDcsPricing/CustomerDiscount/' + custSid + '/' + itemSid)
             .then(function (resp) {
                 var data = resp.data;
-                if (data.Error || !data.Discount || data.Discount <= 0) {
+                if (data.Error || !data.discount || data.discount <= 0) {
                     d.resolve();
                     return;
                 }
@@ -37,15 +37,15 @@ function (ModelEvent, psInfo, $http, docData) {
                     existingPerc = (existingAmt / price) * 100;
                 if (!existingAmt && existingPerc > 0 && price > 0)
                     existingAmt = price * (existingPerc / 100);
-                if (existingPerc >= data.Discount) {
+                if (existingPerc >= data.discount) {
                     d.resolve();
                     return;
                 }
 
                 var patchData = [{
-                    'manual_disc_value': data.Discount,
+                    'manual_disc_value': data.discount,
                     'manual_disc_type': 1,
-                    'manual_disc_reason': 'DCS Level: ' + (data.Level || '')
+                    'manual_disc_reason': 'DCS Level: ' + (data.level || '')
                 }];
 
                 $http.put(
