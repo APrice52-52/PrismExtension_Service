@@ -10,7 +10,7 @@ namespace PrismExtensionServices;
 
 [Serializable]
 [SupportedOSPlatform("windows")]
-public class PrismExtensionServicesConfig
+public class PrismExtensionServicesConfig : IServerConfig
 {
     #region Static Fields
 

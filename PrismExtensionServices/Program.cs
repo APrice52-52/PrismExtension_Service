@@ -69,6 +69,31 @@ public class Program
         if (app.Environment.IsDevelopment())
             app.MapOpenApi();
 
+        // Some proxy servers (e.g. local site proxies) compress+base64-encode the query string
+        // into a single "qryenc" parameter (zlib deflate, then base64). Decompress it here so
+        // the rest of the pipeline sees the original query parameters.
+        app.Use(async (context, next) =>
+        {
+            if (context.Request.Query.TryGetValue("qryenc", out var encoded))
+            {
+                try
+                {
+                    var bytes = Convert.FromBase64String(encoded!);
+                    using var compressed = new MemoryStream(bytes);
+                    using var zlib = new System.IO.Compression.ZLibStream(compressed, System.IO.Compression.CompressionMode.Decompress);
+                    using var decompressed = new MemoryStream();
+                    await zlib.CopyToAsync(decompressed);
+                    var qs = System.Text.Encoding.UTF8.GetString(decompressed.ToArray());
+                    context.Request.QueryString = new QueryString("?" + qs);
+                }
+                catch
+                {
+                    // Leave the request as-is if decompression fails.
+                }
+            }
+            await next();
+        });
+
         app.UseAuthorization();
         app.MapControllers();
 
