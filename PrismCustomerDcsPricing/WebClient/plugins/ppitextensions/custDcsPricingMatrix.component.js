@@ -24,19 +24,19 @@ window.angular.module('prismApp').component('custDcsPricingMatrix', {
             $http.get(apiBase + '/CustomerDcsPricing/matrix')
                 .then(function (resp) {
                     var matrix = resp.data;
-                    $ctrl.levels = matrix.Levels || [];
-                    $ctrl.dcs    = matrix.Dcs    || [];
+                    $ctrl.levels = matrix.levels || [];
+                    $ctrl.dcs    = matrix.dcs    || [];
 
                     // Build lookup map, defaulting every cell to 0.
                     $ctrl.dcs.forEach(function (dcs) {
-                        $ctrl.discounts[dcs.DcsSid] = {};
+                        $ctrl.discounts[dcs.dcsSid] = {};
                         $ctrl.levels.forEach(function (level) {
-                            $ctrl.discounts[dcs.DcsSid][level] = 0;
+                            $ctrl.discounts[dcs.dcsSid][level] = 0;
                         });
                     });
-                    (matrix.Discounts || []).forEach(function (rec) {
-                        if ($ctrl.discounts[rec.DcsSid])
-                            $ctrl.discounts[rec.DcsSid][rec.Level] = rec.Discount;
+                    (matrix.discounts || []).forEach(function (rec) {
+                        if ($ctrl.discounts[rec.dcsSid])
+                            $ctrl.discounts[rec.dcsSid][rec.level] = rec.discount;
                     });
                 })
                 .catch(function () {
@@ -55,9 +55,9 @@ window.angular.module('prismApp').component('custDcsPricingMatrix', {
             $ctrl.dcs.forEach(function (dcs) {
                 $ctrl.levels.forEach(function (level) {
                     payload.push({
-                        DcsSid:   dcs.DcsSid,
-                        Level:    level,
-                        Discount: $ctrl.discounts[dcs.DcsSid][level] || 0
+                        dcsSid:   dcs.dcsSid,
+                        level:    level,
+                        discount: $ctrl.discounts[dcs.dcsSid][level] || 0
                     });
                 });
             });

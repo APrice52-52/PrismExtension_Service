@@ -21,12 +21,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="dcs in $ctrl.dcs track by dcs.DcsSid">
-                        <td><strong>{{dcs.DcsCode}}</strong></td>
+                    <tr ng-repeat="dcs in $ctrl.dcs track by dcs.dcsSid">
+                        <td><strong>{{dcs.dcsCode}}</strong></td>
                         <td ng-repeat="level in $ctrl.levels track by $index">
                             <input type="number"
                                    min="0" max="100" step="0.01"
-                                   ng-model="$ctrl.discounts[dcs.DcsSid][level]"
+                                   ng-model="$ctrl.discounts[dcs.dcsSid][level]"
                                    class="form-control input-sm"
                                    style="width:70px;">
                         </td>
