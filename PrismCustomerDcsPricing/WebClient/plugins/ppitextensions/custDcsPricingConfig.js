@@ -5,7 +5,7 @@ function (psInfo, $rootScope) {
     var perms = ps.permissions || {};
     $rootScope.discountLevelAccess = perms['pcpromoedit'] === 'ALLOW';
 
-    ButtonHooksManager.addHandler(['before_navStoreOpsPriceManager'],
+    ButtonHooksManager.addHandler(['before_openCustDcsPricing'],
         function ($q, $uibModal, prismSessionInfo) {
             var d = $q.defer();
 
