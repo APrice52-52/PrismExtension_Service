@@ -177,9 +177,14 @@ public class PrismExtensionServicesConfig : IServerConfig
         if (string.IsNullOrEmpty(encryptedText))
             return null;
 
-        var bytes = Convert.FromBase64String(encryptedText);
-        var decryptedBytes = ProtectedData.Unprotect(bytes, _entropy, DataProtectionScope.LocalMachine);
-        return Encoding.UTF8.GetString(decryptedBytes);
+        try {
+            var bytes = Convert.FromBase64String(encryptedText);
+            var decryptedBytes = ProtectedData.Unprotect(bytes, _entropy, DataProtectionScope.LocalMachine);
+            return Encoding.UTF8.GetString(decryptedBytes);
+        }
+        catch (Exception) {
+            return encryptedText; // Return the original text if decryption fails
+        }
     }
 
     #endregion
