@@ -81,7 +81,7 @@ public class PrismExtensionServicesConfig : IServerConfig
     /// Per-plugin configuration keyed by the plugin's 20-character Base-36 Id.
     /// Each value is an arbitrary JSON object — the plugin deserialises it.
     /// </summary>
-    public Dictionary<string, IExtensionConfig> Plugins { get; set; } = new();
+    public Dictionary<string, ExtensionConfig> Plugins { get; set; } = new();
 
     #endregion
 

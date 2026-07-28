@@ -1,4 +1,5 @@
 using PrismExtensionServices.Shared;
+using System.Text;
 using System.Text.Json;
 
 namespace PrismExtensionServices.Services;
@@ -16,14 +17,12 @@ internal sealed class PrismPluginHost : IPrismPluginHost
     }
 
     public T? GetConfiguration<T>(string pluginId) where T : class {
-        if (_config.Plugins.ContainsKey(pluginId))
+        if (_config.Plugins.TryGetValue(pluginId, out ExtensionConfig? entry))
         {
-            return JsonSerializer.Deserialize<T>(
-                _config.Plugins[pluginId].ConfigurationData) 
-                ?? 
-                throw new InvalidOperationException("Failed to deserialize plugin configuration");
-        } else {
-            return null;
+            var json = Encoding.UTF8.GetString(Convert.FromBase64String(entry.ConfigurationData));
+            return JsonSerializer.Deserialize<T>(json)
+                ?? throw new InvalidOperationException("Failed to deserialize plugin configuration");
         }
+        return null;
     }
 }
