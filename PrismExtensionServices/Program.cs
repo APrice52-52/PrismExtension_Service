@@ -25,7 +25,7 @@ public class Program
             config.PluginsFolder = Path.Combine(AppContext.BaseDirectory, config.PluginsFolder);
 
         // ── Kestrel port ──────────────────────────────────────────────────────
-        builder.WebHost.UseUrls($"http://+:{config.ServicePort}");
+        builder.WebHost.UseUrls($"http://127.0.0.1:{config.ServicePort}");
 
         // ── Reverse proxy ─────────────────────────────────────────────────────
         // Always deployed behind Apache at base-path /ppExtApi.
