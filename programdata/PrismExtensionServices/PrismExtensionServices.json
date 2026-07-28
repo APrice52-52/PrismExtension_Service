@@ -1,0 +1,16 @@
+{
+  "DbServer": "localhost",
+  "DbPort": 3306,
+  "DbUsername": "root",
+  "DbPasswordJson": "PpitAdm",
+  "ServicePort": 5200,
+  "LogExpiryDays": 30,
+  "LogDebugMessages": false,
+  "PluginsFolder": "plugins",
+  "Plugins": {
+    "4J0G-5TBT-TX5T-Z0SO": {
+      "Id": "4J0G-5TBT-TX5T-Z0SO",
+      "Enabled": true
+    }
+  }
+}

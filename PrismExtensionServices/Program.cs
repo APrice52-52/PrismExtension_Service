@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using PrismExtensionServices.Plugins;
 using PrismExtensionServices.Services;
 using PrismExtensionServices.Shared;
+using Serilog;
 
 namespace PrismExtensionServices;
 
@@ -20,6 +21,21 @@ public class Program
         // ── Configuration ─────────────────────────────────────────────────────
         var config = PrismExtensionServicesConfig.Load();
 
+        // ── Logging ───────────────────────────────────────────────────────────
+        Directory.CreateDirectory(PrismExtensionServicesConfig.LogFolder);
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.File(
+                path: Path.Combine(PrismExtensionServicesConfig.LogFolder, "PrismExtensionServices-.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 90)
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
+
         // Resolve plugins folder: treat a non-rooted path as relative to the exe.
         if (!Path.IsPathRooted(config.PluginsFolder))
             config.PluginsFolder = Path.Combine(AppContext.BaseDirectory, config.PluginsFolder);
@@ -37,6 +53,13 @@ public class Program
             options.KnownProxies.Clear();
         });
 
+        // ── CORS ──────────────────────────────────────────────────────────────
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+                policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        });
+
         // ── Core services ─────────────────────────────────────────────────────
         builder.Services.AddSingleton(config);
         builder.Services.AddSingleton<IDbHelper, DbHelper>();
@@ -44,9 +67,8 @@ public class Program
         builder.Services.AddSingleton<IPrismPluginHost, PrismPluginHost>();
 
         // ── Plugin loading ────────────────────────────────────────────────────
-        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
-        var startupLogger = loggerFactory.CreateLogger<Program>();
-
+        using var startupLoggerFactory = LoggerFactory.Create(b => b.AddSerilog(Log.Logger));
+        var startupLogger = startupLoggerFactory.CreateLogger<Program>();
         var plugins = PluginLoader.LoadAll(config.PluginsFolder, startupLogger);
 
         var mvcBuilder = builder.Services.AddControllers();
@@ -94,6 +116,7 @@ public class Program
             await next();
         });
 
+        app.UseCors();
         app.UseAuthorization();
         app.MapControllers();
 

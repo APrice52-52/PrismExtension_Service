@@ -42,7 +42,7 @@ internal class PrismCustomerDcsPricingStartup : IHostedService
             var levels = new List<string>();
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT DISTINCT udf5_string FROM rpsods.customer WHERE udf5_string IS NOT NULL ORDER BY udf5_string";
+                cmd.CommandText = "SELECT DISTINCT info1 FROM rpsods.customer WHERE info1 IS NOT NULL ORDER BY info1";
                 using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
                 while (await reader.ReadAsync(cancellationToken))
                     levels.Add(reader.GetString(0));

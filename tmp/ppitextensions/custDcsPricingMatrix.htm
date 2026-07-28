@@ -1,0 +1,50 @@
+<div class="modalouter">
+    <div class="modal-header">
+        <button type="button" class="close" ng-click="$ctrl.dismiss()">&times;</button>
+        <h3>DCS Discount Levels</h3>
+    </div>
+
+    <div class="modal-body" style="max-height: calc(100vh - 250px); overflow-y: auto;">
+
+        <div ng-if="$ctrl.loading" class="text-center">
+            <span class="glyphicon glyphicon-refresh spinning"></span> Loading&hellip;
+        </div>
+
+        <div ng-if="$ctrl.loadError" class="alert alert-danger">{{$ctrl.loadError}}</div>
+
+        <div ng-if="!$ctrl.loading && !$ctrl.loadError" class="table-responsive">
+            <table class="table table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>DCS</th>
+                        <th ng-repeat="level in $ctrl.levels track by $index">{{level}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="dcs in $ctrl.dcs track by dcs.dcsSid">
+                        <td><strong>{{dcs.dcsCode}}</strong></td>
+                        <td ng-repeat="level in $ctrl.levels track by $index">
+                            <input type="number"
+                                   min="0" max="100" step="0.01"
+                                   ng-model="$ctrl.discounts[dcs.dcsSid][level]"
+                                   class="form-control input-sm"
+                                   style="width:70px;">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <div class="modal-footer">
+        <div ng-if="$ctrl.saveError" class="alert alert-danger" style="margin-bottom:10px;">{{$ctrl.saveError}}</div>
+        <button type="button" class="btn btn-primary"
+                ng-click="$ctrl.save()"
+                ng-disabled="$ctrl.saving || $ctrl.loading || $ctrl.loadError">
+            <span ng-if="$ctrl.saving"><span class="glyphicon glyphicon-refresh spinning"></span> Saving&hellip;</span>
+            <span ng-if="!$ctrl.saving">Save</span>
+        </button>
+        <button type="button" class="btn btn-default" ng-click="$ctrl.dismiss()">Cancel</button>
+    </div>
+</div>

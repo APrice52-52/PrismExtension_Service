@@ -169,7 +169,7 @@ public class CustomerDcsPricingController : ControllerBase
             var levels = new List<string>();
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT DISTINCT udf5_string FROM rpsods.customer WHERE udf5_string IS NOT NULL ORDER BY udf5_string";
+                cmd.CommandText = "SELECT DISTINCT info1 FROM rpsods.customer WHERE info1 IS NOT NULL ORDER BY info1";
                 using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                     levels.Add(reader.GetString(0));
@@ -255,7 +255,7 @@ public class CustomerDcsPricingController : ControllerBase
     };
 
     /// <summary>
-    /// Given a customer and item, resolves the customer's price level (from customer.udf5_string),
+    /// Given a customer and item, resolves the customer's price level (from customer.info1),
     /// the item's DCS (from invn_sbs_item.dcs_sid), and returns the configured discount percentage.
     /// Returns 0 if no discount is configured for that DCS/level combination.
     /// </summary>
@@ -265,10 +265,10 @@ public class CustomerDcsPricingController : ControllerBase
             using var cnn = _db.GetConnection();
             await cnn.OpenAsync();
 
-            // 1. Read price level from customer.udf5_string
+            // 1. Read price level from customer.info1
             string? level;
             using (var cmd = cnn.CreateCommand()) {
-                cmd.CommandText = "SELECT udf5_string FROM rpsods.customer WHERE sid = @cust_sid";
+                cmd.CommandText = "SELECT info1 FROM rpsods.customer WHERE sid = @cust_sid";
                 cmd.Parameters.AddWithValue("@cust_sid", customerSid);
                 level = await cmd.ExecuteScalarAsync() as string;
             }
