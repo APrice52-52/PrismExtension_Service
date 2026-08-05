@@ -7,4 +7,8 @@
   <Project Path="PrismExtensionServices.Shared/PrismExtensionServices.Shared.csproj" />
   <Project Path="PrismExtensionServices/PrismExtensionServices.csproj" />
   <Project Path="SoCancelFeePlugin/SoCancelFeePlugin.csproj" />
+  <Project Path="PrismExtensionServicesSetup_Installers/PrismExtensionServicesSetup_Installers.csproj" Id="04c638f9-ac3b-4200-a35b-d0f90792467d" />
+  <Project Path="PrismExtensionServicesSetup/PrismExtensionServicesSetup.vdproj" Type="Installer">
+    <Build />
+  </Project>
 </Solution>

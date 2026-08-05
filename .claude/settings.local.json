@@ -10,7 +10,9 @@
       "Bash(MYSQL_HOST=w10c2 MYSQL_PORT=3306 MYSQL_USER=root MYSQL_PASS=PpitAdm MYSQL_DB=rpsods mysql:*)",
       "Bash(node:*)",
       "Bash(mcp-mysql:*)",
-      "Bash(\"/c/Program Files/MySQL/MySQL Shell 8.0/bin/mysqlsh.exe\":*)"
+      "Bash(\"/c/Program Files/MySQL/MySQL Shell 8.0/bin/mysqlsh.exe\":*)",
+      "Bash(xargs grep -l \"ServiceInstall\\\\|ServiceControl\")",
+      "Bash(ls:*)"
     ]
   }
 }

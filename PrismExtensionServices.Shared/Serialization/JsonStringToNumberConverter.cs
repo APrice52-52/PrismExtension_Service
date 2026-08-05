@@ -6,48 +6,46 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace PrismExtensionServices.Shared.Serialization
+namespace PrismExtensionServices.Shared.Serialization;
+public class JsonStringToNumberConverter : JsonConverter<string?>
 {
-    public class JsonStringToNumberConverter : JsonConverter<string?>
+    public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        string? sVal = null;
+        try
         {
-            string? sVal = null;
+            sVal = reader.GetString();
+        }
+        catch
+        {
             try
             {
-                sVal = reader.GetString();
+                sVal = reader.GetDecimal().ToString();
             }
-            catch
+            catch (Exception ex)
             {
-                try
-                {
-                    sVal = reader.GetDecimal().ToString();
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                }
+                throw;
             }
-
-            return sVal;
         }
 
-        public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
+        return sVal;
+    }
+
+    public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
+    {
+        if (string.IsNullOrEmpty(value))
         {
-            if (string.IsNullOrEmpty(value))
+            writer.WriteNullValue();
+        }
+        else
+        {
+            if (decimal.TryParse(value, out var val))
             {
-                writer.WriteNullValue();
+                writer.WriteNumberValue(val);
             }
             else
             {
-                if (decimal.TryParse(value, out var val))
-                {
-                    writer.WriteNumberValue(val);
-                }
-                else
-                {
-                    throw new Exception($"'{value}' is not a valid number.");
-                }
+                throw new Exception($"'{value}' is not a valid number.");
             }
         }
     }
