@@ -22,14 +22,14 @@ public class Program
         var config = PrismExtensionServicesConfig.Load();
 
         // ── Logging ───────────────────────────────────────────────────────────
-        Directory.CreateDirectory(PrismExtensionServicesConfig.LogFolder);
+        Directory.CreateDirectory(config.LogFolder);
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .WriteTo.Console()
             .WriteTo.File(
-                path: Path.Combine(PrismExtensionServicesConfig.LogFolder, "PrismExtensionServices-.log"),
+                path: Path.Combine(config.LogFolder, "PrismExtensionServices-.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 90)
             .CreateLogger();

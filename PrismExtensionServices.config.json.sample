@@ -2,7 +2,7 @@
   "DbServer": "localhost",
   "DbPort": 3306,
   "DbUsername": "root",
-  "DbPasswordJson": "",
+  "DbPassword": "",
   "ServicePort": 5200,
   "LogExpiryDays": 30,
   "LogDebugMessages": false,

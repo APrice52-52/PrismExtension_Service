@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PrismExtensionServicesSetup_Installers
 {
@@ -11,7 +9,7 @@ namespace PrismExtensionServicesSetup_Installers
         internal const string EventSource = "PrismExtensionServices";
 
         // Must match PrismExtensionServices.Configuration.PrismExtensionServicesConfig's
-        // static folder paths and DPAPI entropy exactly, so the host can read what we write.
+        // ConfigBase-derived folder/file conventions exactly, so the host can read what we write.
         public static string AppDataFolder =>
             Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
@@ -19,20 +17,22 @@ namespace PrismExtensionServicesSetup_Installers
 
         public static string LogFolder => Path.Combine(AppDataFolder, "Logs");
 
-        public static string ConfigFileName => Path.Combine(AppDataFolder, "PrismExtensionServices.json");
+        public static string ConfigFileName => Path.Combine(AppDataFolder, "PrismExtensionServices.config.json");
 
-        private static readonly byte[] _entropy = { 7, 42, 183, 61, 200 };
+        // Exposes ConfigBase's protected DPAPI encryption so the installer's plaintext ->
+        // ciphertext conversion matches exactly what the host will decrypt on load.
+        private sealed class EncryptionHelper : PpitConfig.ConfigBase
+        {
+            public override string ApplicationName => "PrismExtensionServices";
+            public string EncryptPublic(string plain) => EncryptPassword(plain);
+        }
 
         public static string EncryptDbPassword(string clearText)
         {
             if (string.IsNullOrEmpty(clearText))
                 return null;
 
-            return Convert.ToBase64String(
-                ProtectedData.Protect(
-                    Encoding.UTF8.GetBytes(clearText),
-                    _entropy,
-                    DataProtectionScope.LocalMachine));
+            return new EncryptionHelper().EncryptPublic(clearText);
         }
 
         public enum EventType

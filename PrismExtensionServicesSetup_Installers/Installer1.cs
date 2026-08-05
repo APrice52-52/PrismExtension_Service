@@ -109,14 +109,14 @@ namespace PrismExtensionServicesSetup_Installers
             if (string.IsNullOrEmpty(dbPort)) dbPort = "3306";
             if (string.IsNullOrEmpty(dbUsername)) dbUsername = "root";
 
-            string dbPasswordJson = Utilities.EncryptDbPassword(dbPassword) ?? string.Empty;
+            string dbPasswordEncrypted = Utilities.EncryptDbPassword(dbPassword) ?? string.Empty;
 
             var sb = new StringBuilder();
             sb.Append("{\r\n");
             sb.Append("  \"DbServer\": \"").Append(JsonEscape(dbServer)).Append("\",\r\n");
             sb.Append("  \"DbPort\": ").Append(dbPort).Append(",\r\n");
             sb.Append("  \"DbUsername\": \"").Append(JsonEscape(dbUsername)).Append("\",\r\n");
-            sb.Append("  \"DbPasswordJson\": \"").Append(JsonEscape(dbPasswordJson)).Append("\",\r\n");
+            sb.Append("  \"DbPassword\": \"").Append(JsonEscape(dbPasswordEncrypted)).Append("\",\r\n");
             sb.Append("  \"ServicePort\": 5200,\r\n");
             sb.Append("  \"LogExpiryDays\": 30,\r\n");
             sb.Append("  \"LogDebugMessages\": false,\r\n");
