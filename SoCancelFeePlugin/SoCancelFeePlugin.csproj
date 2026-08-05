@@ -14,4 +14,8 @@
     <ProjectReference Include="..\PrismExtensionServices.Shared\PrismExtensionServices.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="PpitConfig" Version="1.0.8" />
+  </ItemGroup>
+
 </Project>

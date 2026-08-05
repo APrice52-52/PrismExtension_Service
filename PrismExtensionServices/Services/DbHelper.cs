@@ -18,12 +18,21 @@ internal sealed class DbHelper : IDbHelper
         {
             Server   = _config.DbServer,
             Port     = (uint)_config.DbPort,
-            UserID   = _config.DbUsername,
-            Password = _config.DbPassword,
+            UserID   = _config.DbReadUsername,
+            Password = _config.DbReadPassword
         };
         return new MySqlConnection(cs.ConnectionString);
     }
 
+    public MySqlConnection GetManagementConnection() {
+        var cs = new MySqlConnectionStringBuilder {
+            Server = _config.DbServer,
+            Port = (uint)_config.DbPort,
+            UserID = _config.DbManagementUsername,
+            Password = _config.DbManagementPassword
+        };
+        return new MySqlConnection(cs.ConnectionString);
+    }
 
     public async Task<MySqlConnection> GetOpenConnectionAsync() {
         var connection = GetConnection();

@@ -1,4 +1,5 @@
 using System.Reflection;
+using PpitConfig;
 using PrismExtensionServices.Shared;
 
 namespace PrismExtensionServices.Plugins;
@@ -59,6 +60,20 @@ internal static class PluginLoader
 
             logger.LogInformation("Loaded plugin '{Name}' (id={Id}) from {Dll}", plugin.Name, plugin.Id, Path.GetFileName(dll));
             results.Add(new PluginDescriptor(asm, plugin));
+
+            // Publish the plugin DLL to PpitConfig's central ConfigTypes folder so
+            // PpitConfigurationManager can resolve this plugin's ConfigBase-derived config type
+            // when editing its ConfigurationData blob (see ConfigTypeResolver).
+            try
+            {
+                Directory.CreateDirectory(ConfigTypeResolver.CentralConfigTypesFolder);
+                var dest = Path.Combine(ConfigTypeResolver.CentralConfigTypesFolder, Path.GetFileName(dll));
+                File.Copy(dll, dest, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to publish plugin DLL to central ConfigTypes folder: {Dll}", dll);
+            }
         }
 
         return results;

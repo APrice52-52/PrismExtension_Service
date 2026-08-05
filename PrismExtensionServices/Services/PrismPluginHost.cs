@@ -10,8 +10,6 @@ internal sealed class PrismPluginHost : IPrismPluginHost
 
     public int Version => 0;
 
-    public IServerConfig ServerConfig => _config;
-
     public PrismPluginHost(PrismExtensionServicesConfig config) {
         _config = config;
     }

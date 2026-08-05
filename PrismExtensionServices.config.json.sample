@@ -1,8 +1,10 @@
 {
   "DbServer": "localhost",
   "DbPort": 3306,
-  "DbUsername": "root",
-  "DbPassword": "",
+  "DbReadUsername": "root",
+  "DbReadPassword": "",
+  "DbManagementUsername": "root",
+  "DbManagementPassword": "",
   "ServicePort": 5200,
   "LogExpiryDays": 30,
   "LogDebugMessages": false,

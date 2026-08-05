@@ -45,7 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="PpitConfig" Version="1.0.6" />
+    <PackageReference Include="PpitConfig" Version="1.0.8" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Installer1.cs">

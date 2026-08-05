@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using PpitConfig;
 
 namespace SoCancelFeePlugin;
 
-internal class SoCancelFeePluginConfig
+internal class SoCancelFeePluginConfig : ConfigBase
 {
+    public override string ApplicationName => "SoCancelFeePlugin";
+
     public decimal FeePercentage { get; set; } = 0;
     public bool FeeOnTotal { get; set; } = true;
     public int FeeType { get; set; } = 0;

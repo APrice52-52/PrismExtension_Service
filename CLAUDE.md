@@ -36,33 +36,33 @@ Two-project solution:
 **`PrismExtensionServices.Shared`** (`net10.0`) — shared contract library. Plugins and the host both reference this; neither may reference the other. Contains:
 - `IPrismPlugin` — plugin entry point (`Id`: 20-char Base-36, `Name`, `ConfigureServices`)
 - `IDbHelper`, `IPrismHelper`, `IPrismPluginHost` — host services available to plugins via DI
-- `PrismExtensionServicesConfig` — config POCO
 
 **`PrismExtensionServices`** (`net10.0-windows`) — ASP.NET Core 10 Web API host, runs as a Windows Service. Contains:
 - `Plugins/PluginLoadContext` — one `AssemblyLoadContext` per plugin DLL; intentionally routes `PrismExtensionServices.Shared` to the **default** context so shared interface types are identical across host and plugins
 - `Plugins/PluginLoader` — scans `PluginsFolder` at startup, loads every DLL that contains a concrete `IPrismPlugin`
-- `Services/DbHelper` — `IDbHelper` implementation; decrypts `DbPasswordJson` with DPAPI (`ProtectedData.Unprotect`, `LocalMachine` scope, same Base-64 format as other Prism apps)
+- `Services/DbHelper` — `IDbHelper` implementation; `GetConnection()` uses the read credentials (`DbReadUsername`/`DbReadPassword`), `GetManagementConnection()` uses the elevated/DDL credentials (`DbManagementUsername`/`DbManagementPassword`) — both password fields are DPAPI-decrypted transparently by the config class
 - `Program.cs` — wires everything: clears default config sources, loads config, registers DI, loads plugins, calls `AddApplicationPart` per plugin assembly so their controllers are discovered by MVC
 
 ## Configuration
 
-`PrismExtensionServicesConfig` lives in `PrismExtensionServices/Configuration/` (host project only — plugins do not reference it). It mirrors the `StyleViewConfig` pattern from the StyleViewService project.
+`PrismExtensionServicesConfig` lives in `PrismExtensionServices/Configuration/`, inherits `PpitConfig.ConfigBase` (host project only — plugins do not reference it).
 
-Live config: `C:\ProgramData\Price Point IT\PrismExtensionServices\PrismExtensionServices.json`
-Solution reference copy: `PrismExtensionServices.json.sample`
+Live config: `C:\ProgramData\Price Point IT\PrismExtensionServices\PrismExtensionServices.config.json`
+Solution reference copy: `PrismExtensionServices.config.json` (always re-copy after updating the live file)
+Sample/template: `PrismExtensionServices.config.json.sample`
 
-Static folder-path properties (computed from `%CommonApplicationData%` at class-init time): `AppDataFolder`, `ConfigFolder`, `ConfigFileName`, `LogFolder`.
+Folder-path properties (instance properties inherited from `ConfigBase`, computed as `{CommonAppData}\Price Point IT\{ApplicationName}`): `AppDataFolder`, `LogFolder`.
 
 Key instance fields:
 | Field | Notes |
 |---|---|
-| `DbPassword` | Plain-text (`[JsonIgnore]`) — set this directly in code or via `DbPasswordJson` |
-| `DbPasswordJson` | DPAPI-encrypted Base-64 (`LocalMachine` scope, entropy `{ 7, 42, 183, 61, 200 }`) — this is what is persisted in the JSON file |
+| `DbReadUsername` / `DbReadPassword` | Credentials used by `IDbHelper.GetConnection()` (normal read/write access). Password is `[JsonConverter(typeof(EncryptedStringConverter))]` — DPAPI-encrypted transparently on save/load |
+| `DbManagementUsername` / `DbManagementPassword` | Credentials used by `IDbHelper.GetManagementConnection()` (elevated/DDL access). Password encrypted the same way |
 | `ServicePort` | Kestrel listen port |
 | `PluginsFolder` | Relative paths resolve from `AppContext.BaseDirectory`; defaults to `plugins/` |
-| `Plugins` | `Dictionary<string, JsonElement>` keyed by plugin's 20-char Base-36 `Id` |
+| `Plugins` | `Dictionary<string, ExtensionConfig>` keyed by plugin's 20-char Base-36 `Id` |
 
-Config is loaded via `PrismExtensionServicesConfig.Load()` in `Program.cs` — no ASP.NET Core configuration pipeline involved. `Load`/`Save` both include a 1-second retry on file contention.
+Config is loaded via `PrismExtensionServicesConfig.Load()` in `Program.cs`. `Load`/`Save` are inherited from `PpitConfig.ConfigBase`.
 
 ## Plugin Development
 

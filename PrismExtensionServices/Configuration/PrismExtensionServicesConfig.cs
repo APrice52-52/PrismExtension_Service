@@ -7,7 +7,7 @@ namespace PrismExtensionServices;
 
 [Serializable]
 [SupportedOSPlatform("windows")]
-public class PrismExtensionServicesConfig : ConfigBase, IServerConfig
+public class PrismExtensionServicesConfig : ConfigBase
 {
     #region Constructor
 
@@ -29,10 +29,16 @@ public class PrismExtensionServicesConfig : ConfigBase, IServerConfig
     public int    DbPort   { get; set; } = 3306;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? DbUsername { get; set; } = "";
+    public string? DbReadUsername { get; set; } = "";
 
     [JsonConverter(typeof(EncryptedStringConverter))]
-    public string? DbPassword { get; set; } = "";
+    public string? DbReadPassword { get; set; } = "";
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? DbManagementUsername { get; set; } = "";
+
+    [JsonConverter(typeof(EncryptedStringConverter))]
+    public string? DbManagementPassword { get; set; } = "";
 
     public int  ServicePort      { get; set; } = 5000;
     public int  LogExpiryDays    { get; set; } = 30;
