@@ -23,22 +23,53 @@ public class Program
 
         // ── Logging ───────────────────────────────────────────────────────────
         Directory.CreateDirectory(config.LogFolder);
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
-            .Enrich.FromLogContext()
-            .WriteTo.Console()
-            .WriteTo.File(
-                path: Path.Combine(config.LogFolder, "PrismExtensionServices-.log"),
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 90)
-            .CreateLogger();
-
-        builder.Host.UseSerilog();
 
         // Resolve plugins folder: treat a non-rooted path as relative to the exe.
         if (!Path.IsPathRooted(config.PluginsFolder))
             config.PluginsFolder = Path.Combine(AppContext.BaseDirectory, config.PluginsFolder);
+
+        // Load plugins first (using a bootstrap console-only logger) so we know which
+        // plugins want their own log file before building the final Log.Logger.
+        using var bootstrapLoggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var bootstrapLogger = bootstrapLoggerFactory.CreateLogger<Program>();
+        var plugins = PluginLoader.LoadAll(config.PluginsFolder, bootstrapLogger);
+
+        var pluginLogTargets = plugins
+            .Select(p => new
+            {
+                AssemblyName = p.Assembly.GetName().Name,
+                LogFileName = PluginLogTargetResolver.TryGetLogFileName(
+                    config.Plugins.GetValueOrDefault(p.Plugin.Id))
+            })
+            .Where(t => t.AssemblyName is not null && t.LogFileName is not null)
+            .ToList();
+
+        var loggerConfig = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console();
+
+        loggerConfig.WriteTo.Logger(lc => lc
+            .Filter.ByExcluding(evt => pluginLogTargets.Any(t => Serilog.Filters.Matching.FromSource(t.AssemblyName!)(evt)))
+            .WriteTo.File(
+                path: Path.Combine(config.LogFolder, "PrismExtensionServices-.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 90));
+
+        foreach (var target in pluginLogTargets)
+        {
+            loggerConfig.WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(Serilog.Filters.Matching.FromSource(target.AssemblyName!))
+                .WriteTo.File(
+                    path: Path.Combine(config.LogFolder, $"{target.LogFileName}-.log"),
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 90));
+        }
+
+        Log.Logger = loggerConfig.CreateLogger();
+
+        builder.Host.UseSerilog();
 
         // ── Kestrel port ──────────────────────────────────────────────────────
         builder.WebHost.UseUrls($"http://127.0.0.1:{config.ServicePort}");
@@ -66,11 +97,7 @@ public class Program
         builder.Services.AddSingleton<IPrismHelper, PrismHelper>();
         builder.Services.AddSingleton<IPrismPluginHost, PrismPluginHost>();
 
-        // ── Plugin loading ────────────────────────────────────────────────────
-        using var startupLoggerFactory = LoggerFactory.Create(b => b.AddSerilog(Log.Logger));
-        var startupLogger = startupLoggerFactory.CreateLogger<Program>();
-        var plugins = PluginLoader.LoadAll(config.PluginsFolder, startupLogger);
-
+        // ── Plugin registration ──────────────────────────────────────────────
         var mvcBuilder = builder.Services.AddControllers();
 
         foreach (var (assembly, plugin) in plugins)
