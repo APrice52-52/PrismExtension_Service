@@ -12,7 +12,8 @@
       "Bash(mcp-mysql:*)",
       "Bash(\"/c/Program Files/MySQL/MySQL Shell 8.0/bin/mysqlsh.exe\":*)",
       "Bash(xargs grep -l \"ServiceInstall\\\\|ServiceControl\")",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebSearch"
     ]
   }
 }

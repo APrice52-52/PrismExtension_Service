@@ -102,21 +102,27 @@ namespace PrismExtensionServicesSetup_Installers
         {
             string dbServer = Context.Parameters["DBSERVER"];
             string dbPort = Context.Parameters["DBPORT"];
-            string dbUsername = Context.Parameters["DBUSERNAME"];
-            string dbPassword = Context.Parameters["DBPASSWORD"];
+            string dbReadUsername = Context.Parameters["DBREADUSERNAME"];
+            string dbReadPassword = Context.Parameters["DBREADPASSWORD"];
+            string dbManagementUsername = Context.Parameters["DBMANAGEMENTUSERNAME"];
+            string dbManagementPassword = Context.Parameters["DBMANAGEMENTPASSWORD"];
 
             if (string.IsNullOrEmpty(dbServer)) dbServer = "localhost";
             if (string.IsNullOrEmpty(dbPort)) dbPort = "3306";
-            if (string.IsNullOrEmpty(dbUsername)) dbUsername = "root";
+            if (string.IsNullOrEmpty(dbReadUsername)) dbReadUsername = "root";
+            if (string.IsNullOrEmpty(dbManagementUsername)) dbManagementUsername = "root";
 
-            string dbPasswordEncrypted = Utilities.EncryptDbPassword(dbPassword) ?? string.Empty;
+            string dbReadPasswordEncrypted = Utilities.EncryptDbPassword(dbReadPassword) ?? string.Empty;
+            string dbManagementPasswordEncrypted = Utilities.EncryptDbPassword(dbManagementPassword) ?? string.Empty;
 
             var sb = new StringBuilder();
             sb.Append("{\r\n");
             sb.Append("  \"DbServer\": \"").Append(JsonEscape(dbServer)).Append("\",\r\n");
             sb.Append("  \"DbPort\": ").Append(dbPort).Append(",\r\n");
-            sb.Append("  \"DbUsername\": \"").Append(JsonEscape(dbUsername)).Append("\",\r\n");
-            sb.Append("  \"DbPassword\": \"").Append(JsonEscape(dbPasswordEncrypted)).Append("\",\r\n");
+            sb.Append("  \"DbReadUsername\": \"").Append(JsonEscape(dbReadUsername)).Append("\",\r\n");
+            sb.Append("  \"DbReadPassword\": \"").Append(JsonEscape(dbReadPasswordEncrypted)).Append("\",\r\n");
+            sb.Append("  \"DbManagementUsername\": \"").Append(JsonEscape(dbManagementUsername)).Append("\",\r\n");
+            sb.Append("  \"DbManagementPassword\": \"").Append(JsonEscape(dbManagementPasswordEncrypted)).Append("\",\r\n");
             sb.Append("  \"ServicePort\": 5200,\r\n");
             sb.Append("  \"LogExpiryDays\": 30,\r\n");
             sb.Append("  \"LogDebugMessages\": false,\r\n");
