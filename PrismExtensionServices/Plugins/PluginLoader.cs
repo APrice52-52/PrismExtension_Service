@@ -9,9 +9,12 @@ internal sealed record PluginDescriptor(Assembly Assembly, IPrismPlugin Plugin);
 internal static class PluginLoader
 {
     /// <summary>
-    /// Scans <paramref name="pluginsFolder"/> for DLLs, loads each in its own
-    /// <see cref="PluginLoadContext"/>, and returns descriptors for every DLL
-    /// that contains a concrete <see cref="IPrismPlugin"/> implementation.
+    /// Scans <paramref name="pluginsFolder"/> for per-plugin subdirectories (each the
+    /// <c>dotnet publish</c> output of one plugin project), loads every DLL in each
+    /// subdirectory in its own <see cref="PluginLoadContext"/>, and returns descriptors
+    /// for every DLL that contains a concrete <see cref="IPrismPlugin"/> implementation.
+    /// Each plugin gets its own subdirectory so that private dependency DLLs (which may
+    /// differ in version between plugins) never collide on disk.
     /// </summary>
     public static IReadOnlyList<PluginDescriptor> LoadAll(string pluginsFolder, ILogger logger)
     {
@@ -23,7 +26,17 @@ internal static class PluginLoader
             return results;
         }
 
-        foreach (var dll in Directory.GetFiles(pluginsFolder, "*.dll", SearchOption.TopDirectoryOnly))
+        foreach (var pluginDir in Directory.GetDirectories(pluginsFolder))
+            results.AddRange(LoadFromDirectory(pluginDir, logger));
+
+        return results;
+    }
+
+    private static IEnumerable<PluginDescriptor> LoadFromDirectory(string pluginDir, ILogger logger)
+    {
+        var results = new List<PluginDescriptor>();
+
+        foreach (var dll in Directory.GetFiles(pluginDir, "*.dll", SearchOption.TopDirectoryOnly))
         {
             var ctx = new PluginLoadContext(dll);
 

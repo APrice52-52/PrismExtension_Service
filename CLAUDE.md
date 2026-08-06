@@ -38,8 +38,8 @@ Two-project solution:
 - `IDbHelper`, `IPrismHelper`, `IPrismPluginHost` — host services available to plugins via DI
 
 **`PrismExtensionServices`** (`net10.0-windows`) — ASP.NET Core 10 Web API host, runs as a Windows Service. Contains:
-- `Plugins/PluginLoadContext` — one `AssemblyLoadContext` per plugin DLL; intentionally routes `PrismExtensionServices.Shared` to the **default** context so shared interface types are identical across host and plugins
-- `Plugins/PluginLoader` — scans `PluginsFolder` at startup, loads every DLL that contains a concrete `IPrismPlugin`
+- `Plugins/PluginLoadContext` — one `AssemblyLoadContext` per plugin DLL; intentionally routes `PrismExtensionServices.Shared` to the **default** context so shared interface types are identical across host and plugins; resolves each plugin's private dependencies via `AssemblyDependencyResolver` reading that plugin's `.deps.json`
+- `Plugins/PluginLoader` — scans `PluginsFolder` for **one subdirectory per plugin** at startup, loads every DLL in each subdirectory that contains a concrete `IPrismPlugin`
 - `Services/DbHelper` — `IDbHelper` implementation; `GetConnection()` uses the read credentials (`DbReadUsername`/`DbReadPassword`), `GetManagementConnection()` uses the elevated/DDL credentials (`DbManagementUsername`/`DbManagementPassword`) — both password fields are DPAPI-decrypted transparently by the config class
 - `Program.cs` — wires everything: clears default config sources, loads config, registers DI, loads plugins, calls `AddApplicationPart` per plugin assembly so their controllers are discovered by MVC
 
@@ -71,4 +71,12 @@ A plugin is a class library that:
 2. Implements `IPrismPlugin` (the host discovers it via reflection)
 3. Declares its REST controllers normally — the host registers them via `AddApplicationPart`
 
-Plugin DLLs (and their private dependencies) are dropped into the `plugins/` subfolder next to the exe. The host injects `IDbHelper`, `IPrismHelper`, and `IPrismPluginHost` into plugin-registered services automatically because they are registered in the host's DI container before `plugin.ConfigureServices` is called.
+Each plugin gets **its own subfolder** under `plugins/` next to the exe — the full `dotnet publish` output of the plugin project (main DLL + `.deps.json` + private dependency DLLs), e.g.:
+
+```bash
+dotnet publish MyPlugin/MyPlugin.csproj -c Release -o plugins/MyPlugin
+```
+
+Do **not** drop multiple plugins' publish output into the same flat folder — private dependency DLLs (e.g. different versions of the same NuGet package across plugins) would collide on disk. One subfolder per plugin keeps each plugin's dependencies isolated both on disk and at runtime (each subfolder gets its own `PluginLoadContext`).
+
+The host injects `IDbHelper`, `IPrismHelper`, and `IPrismPluginHost` into plugin-registered services automatically because they are registered in the host's DI container before `plugin.ConfigureServices` is called.
