@@ -42,7 +42,7 @@ their own repositories without a source/project reference to this solution.
 1. **Configuration** is loaded first (`PrismExtensionServicesConfig`, backed by
    `PpitConfig.ConfigBase`), giving the host its DB connection info, Kestrel port, and
    the `PluginsFolder` path.
-2. **Plugins are loaded** by scanning `PluginsFolder` for subdirectories — one
+2. **Plugins are discovered** by scanning `PluginsFolder` for subdirectories — one
    subdirectory per plugin. Every DLL in a plugin's subdirectory is scanned for a
    concrete `IPrismPlugin` implementation.
    - Each plugin subdirectory gets its own `AssemblyLoadContext`, with private
@@ -52,16 +52,24 @@ their own repositories without a source/project reference to this solution.
      context, so interface types (`IPrismPlugin`, `IDbHelper`, etc.) are the exact same
      `Type` on both sides — this is what makes dependency injection across the
      load-context boundary work.
-3. **Core services are registered in DI** (see below) *before* any plugin code runs.
-4. **Each plugin's `ConfigureServices` is called**, letting it register its own
-   services (hosted services, business logic, etc.) into the same DI container the
-   host uses. Because the core services were already registered in the previous step,
-   plugins can constructor-inject them freely.
-5. **Each plugin's assembly is added as an MVC "Application Part"**
+   - A discovered plugin's DLL is also copied into `PpitConfig`'s central
+     ConfigTypes folder so `PpitConfigurationManager` can resolve its configuration
+     type even before the plugin is enabled.
+3. **Discovered plugins are filtered against config**: a plugin is only actually
+   registered with the host if `Plugins` in the config file has an entry for its
+   `Id` *and* that entry's `Enabled` is `true`. Plugins with no config entry, or
+   with `Enabled: false`, are skipped entirely — no DI registration, no
+   `ConfigureServices`, no controllers, no log targets.
+4. **Core services are registered in DI** (see below) *before* any plugin code runs.
+5. **Each remaining (enabled) plugin's `ConfigureServices` is called**, letting it
+   register its own services (hosted services, business logic, etc.) into the same
+   DI container the host uses. Because the core services were already registered in
+   the previous step, plugins can constructor-inject them freely.
+6. **Each remaining plugin's assembly is added as an MVC "Application Part"**
    (`AddApplicationPart`), so any `[ApiController]` classes the plugin declares are
    automatically discovered and routed by ASP.NET Core — no manual route
    registration needed.
-6. The web host starts, `UsePathBase("/ppExtApi")` strips the reverse-proxy prefix,
+7. The web host starts, `UsePathBase("/ppExtApi")` strips the reverse-proxy prefix,
    and all plugin controllers become reachable as normal REST endpoints.
 
 ## Services available to plugins
@@ -190,8 +198,9 @@ own `AssemblyLoadContext`.
 ## Registering a plugin
 
 Once a plugin's files are deployed under `plugins/<PluginName>/`, it still needs an
-entry in the host's config file so it can be enabled and given its own configuration
-block:
+**enabled** entry in the host's config file — the host discovers a plugin's DLL
+regardless, but only actually registers it (DI, controllers, log targets) if it has
+a config entry with `Enabled: true`:
 
 ```json
 {
@@ -210,11 +219,26 @@ block:
   own config class expects. An empty object is `eyJ9` — but `e30=` (`{}`) is also
   common if the plugin defines no settings yet.
 - The host does not require the plugin's DLL and its config entry to be added at the
-  same time, but a plugin with no config entry simply gets `null` back from
-  `GetConfiguration<T>`.
+  same time, but a plugin with no config entry (or `Enabled: false`) is not
+  registered at all — it won't appear in DI, won't expose controllers, and
+  `GetConfiguration<T>` is moot since the plugin's own code never runs.
 
 Restart the Windows Service after adding new plugin files or config so the host
 rescans the plugins folder.
+
+### Folder-level opt-out (`plugin.ini`)
+
+For extreme cases — e.g. a broken plugin you need to exclude before you even know
+its `Id`, or without touching the main JSON config — drop a `plugin.ini` file
+directly in the plugin's subfolder:
+
+```ini
+enabled=false
+```
+
+The host skips that folder entirely during scanning: no DLL in it is loaded, no
+`AssemblyLoadContext` is created for it. A missing `plugin.ini`, or one without an
+`enabled=false` line, has no effect — the folder is scanned normally.
 
 ## Build & run
 

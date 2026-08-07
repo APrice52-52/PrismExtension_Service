@@ -36,6 +36,12 @@ internal static class PluginLoader
     {
         var results = new List<PluginDescriptor>();
 
+        if (IsDisabledViaIniFile(pluginDir, logger))
+        {
+            logger.LogInformation("Plugin folder '{Folder}' disabled via plugin.ini — skipping", pluginDir);
+            return results;
+        }
+
         foreach (var dll in Directory.GetFiles(pluginDir, "*.dll", SearchOption.TopDirectoryOnly))
         {
             var ctx = new PluginLoadContext(dll);
@@ -90,5 +96,47 @@ internal static class PluginLoader
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Checks for a <c>plugin.ini</c> file directly inside <paramref name="pluginDir"/>
+    /// containing a line like <c>enabled=false</c>. Used as a config-independent escape
+    /// hatch to exclude a plugin folder from scanning entirely (e.g. for a broken plugin,
+    /// before its Id/config entry is even known). Absence of the file, or any parse
+    /// failure, is treated as "enabled" (fail open).
+    /// </summary>
+    private static bool IsDisabledViaIniFile(string pluginDir, ILogger logger)
+    {
+        var iniPath = Path.Combine(pluginDir, "plugin.ini");
+        if (!File.Exists(iniPath))
+            return false;
+
+        try
+        {
+            foreach (var rawLine in File.ReadAllLines(iniPath))
+            {
+                var line = rawLine.Trim();
+                if (line.Length == 0 || line.StartsWith(';') || line.StartsWith('#'))
+                    continue;
+
+                var parts = line.Split('=', 2);
+                if (parts.Length != 2)
+                    continue;
+
+                if (!parts[0].Trim().Equals("enabled", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var value = parts[1].Trim();
+                return value.Equals("false", StringComparison.OrdinalIgnoreCase)
+                    || value.Equals("0", StringComparison.Ordinal)
+                    || value.Equals("no", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to read plugin.ini in {Folder} — treating plugin as enabled", pluginDir);
+        }
+
+        return false;
     }
 }

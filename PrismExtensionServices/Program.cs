@@ -32,7 +32,26 @@ public class Program
         // plugins want their own log file before building the final Log.Logger.
         using var bootstrapLoggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var bootstrapLogger = bootstrapLoggerFactory.CreateLogger<Program>();
-        var plugins = PluginLoader.LoadAll(config.PluginsFolder, bootstrapLogger);
+        var plugins = PluginLoader.LoadAll(config.PluginsFolder, bootstrapLogger)
+            .Where(p =>
+            {
+                if (!config.Plugins.TryGetValue(p.Plugin.Id, out var ext))
+                {
+                    bootstrapLogger.LogInformation(
+                        "Plugin '{Name}' (id={Id}) has no configuration entry — skipping", p.Plugin.Name, p.Plugin.Id);
+                    return false;
+                }
+
+                if (!ext.Enabled)
+                {
+                    bootstrapLogger.LogInformation(
+                        "Plugin '{Name}' (id={Id}) is disabled — skipping", p.Plugin.Name, p.Plugin.Id);
+                    return false;
+                }
+
+                return true;
+            })
+            .ToList();
 
         var pluginLogTargets = plugins
             .Select(p => new
