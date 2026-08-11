@@ -29,10 +29,12 @@ public class PrismExtensionServicesConfig : ConfigBase
     public int    DbPort   { get; set; } = 3306;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? DbReadUsername { get; set; } = "";
+    //public string? DbReadUsername { get; set; } = "";
+    public string? DbReadUsername { get; set; } = "reportuser";
 
     [JsonConverter(typeof(EncryptedStringConverter))]
-    public string? DbReadPassword { get; set; } = "";
+    //public string? DbReadPassword { get; set; } = "";
+    public string? DbReadPassword { get; set; } = "report";
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? DbManagementUsername { get; set; } = "";

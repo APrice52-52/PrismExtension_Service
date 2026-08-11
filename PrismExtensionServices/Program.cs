@@ -3,6 +3,7 @@ using PrismExtensionServices.Plugins;
 using PrismExtensionServices.Services;
 using PrismExtensionServices.Shared;
 using Serilog;
+using Microsoft.Extensions.FileProviders;
 
 namespace PrismExtensionServices;
 
@@ -20,6 +21,8 @@ public class Program
 
         // ── Configuration ─────────────────────────────────────────────────────
         var config = PrismExtensionServicesConfig.Load();
+        Console.WriteLine($"DB User: '{config.DbReadUsername}'");
+        Console.WriteLine($"DB Password empty: {string.IsNullOrEmpty(config.DbReadPassword)}");
 
         // ── Logging ───────────────────────────────────────────────────────────
         Directory.CreateDirectory(config.LogFolder);
@@ -52,6 +55,12 @@ public class Program
                 return true;
             })
             .ToList();
+
+        foreach (var plugin in plugins)
+        {
+            Console.WriteLine($"PLUGIN: {plugin.Plugin.Name}");
+            Console.WriteLine($"ASSEMBLY: {plugin.Assembly.FullName}");
+        }
 
         var pluginLogTargets = plugins
             .Select(p => new
@@ -119,11 +128,28 @@ public class Program
         // ── Plugin registration ──────────────────────────────────────────────
         var mvcBuilder = builder.Services.AddControllers();
 
+        var razorBuilder = builder.Services
+            .AddRazorPages();
+
         foreach (var (assembly, plugin) in plugins)
         {
+            Console.WriteLine($"Registering plugin: {plugin.Name}");
+
             mvcBuilder.AddApplicationPart(assembly);
+            razorBuilder.AddApplicationPart(assembly);
+
             plugin.ConfigureServices(builder.Services);
         }
+
+        //foreach (var (assembly, plugin) in plugins)
+        //{
+        //    mvcBuilder.AddApplicationPart(assembly);
+        //    //Cyclecount
+        //    razorBuilder.AddApplicationPart(assembly);
+
+        //    plugin.ConfigureServices(builder.Services);
+        //}
+
 
         // ── OpenAPI ───────────────────────────────────────────────────────────
         builder.Services.AddOpenApi();
@@ -131,9 +157,24 @@ public class Program
         // ─────────────────────────────────────────────────────────────────────
         var app = builder.Build();
 
+
+
         app.UseForwardedHeaders();
+
         app.UsePathBase("/ppExtApi");
 
+        var cycleCountWwwroot = Path.Combine(
+            AppContext.BaseDirectory,
+            "plugins",
+            "cyclecount",
+            "wwwroot"
+        );
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(cycleCountWwwroot),
+            RequestPath = "/cyclecount"
+        });
         if (app.Environment.IsDevelopment())
             app.MapOpenApi();
 
@@ -163,8 +204,29 @@ public class Program
         });
 
         app.UseCors();
+
+        //Cyclecount
+        app.Use(async (context, next) =>
+        {
+            context.Response.Headers.Remove("X-Frame-Options");
+            context.Response.Headers["Content-Security-Policy"] = "frame-ancestors *";
+            await next();
+        });
+
         app.UseAuthorization();
+
         app.MapControllers();
+
+        app.MapRazorPages();
+
+        var endpoints = app.Services
+            .GetRequiredService<EndpointDataSource>()
+            .Endpoints;
+
+        foreach (var endpoint in endpoints)
+        {
+            Console.WriteLine($"ENDPOINT FOUND: {endpoint.DisplayName}");
+        }
 
         app.Run();
     }

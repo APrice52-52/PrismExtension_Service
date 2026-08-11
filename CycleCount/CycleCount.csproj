@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\PrismExtensionServices.Shared\PrismExtensionServices.Shared.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MySqlConnector" Version="2.6.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Installation Notes\CreateTableCycleCounts.Sql" />
+	</ItemGroup>
+
+	<Target Name="CopyToHostPlugins" AfterTargets="Build">
+		<PropertyGroup>
+			<HostPluginsDir>$(MSBuildThisFileDirectory)..\PrismExtensionServices\bin\$(Configuration)\net10.0-windows\plugins\CycleCount\</HostPluginsDir>
+		</PropertyGroup>
+		<ItemGroup>
+			<PluginOutput Include="$(OutputPath)*.*" Exclude="$(OutputPath)PrismExtensionServices.Shared.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(PluginOutput)" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" />
+	</Target>
+
+</Project>

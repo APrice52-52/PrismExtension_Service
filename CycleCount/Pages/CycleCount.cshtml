@@ -1,0 +1,177 @@
+﻿@page "/"
+@model CycleCount.Pages.CycleCountModel
+
+<style>
+    .cycle-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 40px 60px; 
+        box-sizing: border-box;
+    }
+
+    .cycle-title {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .cycle-content {
+        flex: 1; /* pushes table into middle space */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .cycle-table {
+        flex: 1;
+        width: 100%;
+    }
+
+        .cycle-table table {
+            width: 100%; 
+            background: white;
+        }
+
+    .cycle-submit {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+        padding-bottom: 20px;
+    }
+</style>
+
+<div class="cycle-page">
+
+    <div class="cycle-title">
+        Cycle Count
+    </div>
+
+    <div class="cycle-content">
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">
+        @Model.SuccessMessage
+    </div>
+    <script>
+        if (window.parent !== window) {
+            window.parent.postMessage({ type: 'cycleCountSubmitted' }, '*');
+        }
+    </script>
+}
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @Model.ErrorMessage
+            </div>
+
+            @if (Model.ErrorMessage == "A cycle count has already been completed for today.")
+            {
+                <script>
+                            if (window.parent !== window) {
+                                window.parent.postMessage({ type: 'cycleCountSubmitted' }, '*');
+                            }
+                </script>
+            }
+        }
+
+@if (string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <form method="post" id="cycleCountForm">
+        <script>
+            document.getElementById('cycleCountForm').addEventListener('submit', function (e) {
+                if (window.self === window.top) {
+                    e.preventDefault();
+                    alert('This form may only be submitted from within the authorised application.');
+                }
+            });
+        </script>
+
+        @* <table class="table"> *@
+                <div class="cycle-table">
+                    @* <table class="table table-striped"> *@
+                        <table class="table">
+
+
+            <thead>
+                <tr>
+                    <th>ALU</th>
+                    <th>Description1</th>
+                    <th>Description2</th>
+                    <th>Attribute</th>
+                    <th>Size</th>
+                    <th>Qty</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (int i = 0; i < Model.Items.Count; i++)
+                    {
+                        <tr>
+
+                            <td>
+                                @Model.Items[i].ALU
+                                <input type="hidden" asp-for="Items[i].ALU" />
+                            </td>
+
+                            <td>
+                                @Model.Items[i].Description1
+                                        <input type="hidden" asp-for="Items[i].Description1" />
+                            </td>
+
+                            <td>
+                                @Model.Items[i].Description2
+                                        <input type="hidden" asp-for="Items[i].Description2" />
+                            </td>
+
+                            <td>
+                                @Model.Items[i].Attribute
+                                        <input type="hidden" asp-for="Items[i].Attribute" />
+                            </td>
+
+                            <td>
+                                @Model.Items[i].Size
+                                        <input type="hidden" asp-for="Items[i].Size" />
+                            </td>
+
+                            <td>
+
+                                <input asp-for="Items[i].CountedQty"
+                                type="number"
+                                class="form-control" />
+
+                                <input type="hidden"
+                                asp-for="Items[i].ItemSid" />
+
+                                <input type="hidden"
+                                asp-for="Items[i].StoreSid" />
+
+                                <input type="hidden"
+                                asp-for="Items[i].SystemQty" />
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+                </div>
+
+                <div class="cycle-submit">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        Submit
+                    </button>
+                </div>
+
+        </form>
+        
+
+}
+    </div>
+    </div>

@@ -16,6 +16,7 @@ internal sealed class DbHelper : IDbHelper
     {
         var cs = new MySqlConnectionStringBuilder
         {
+            Database = "rpsods",
             Server   = _config.DbServer,
             Port     = (uint)_config.DbPort,
             UserID   = _config.DbReadUsername,
