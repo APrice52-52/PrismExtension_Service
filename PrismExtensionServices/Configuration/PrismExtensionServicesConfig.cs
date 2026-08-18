@@ -60,7 +60,6 @@ public class PrismExtensionServicesConfig : ConfigBase
 
     #endregion
 
-
     #region Load
 
     public static PrismExtensionServicesConfig Load()

@@ -3,6 +3,7 @@
     <File Path="prism-extension-services.conf" />
     <File Path="PrismExtensionServices.json.sample" />
   </Folder>
+  <Project Path="CycleCount/CycleCount.csproj" />
   <Project Path="PrismCustomerDcsPricing/PrismCustomerDcsPricing.csproj" Id="9e6fc13d-a94e-4f2f-a38d-4586cfbe63b8" />
   <Project Path="PrismExtensionServices.Shared/PrismExtensionServices.Shared.csproj" />
   <Project Path="PrismExtensionServices/PrismExtensionServices.csproj" />

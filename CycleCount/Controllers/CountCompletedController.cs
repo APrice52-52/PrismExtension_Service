@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CycleCount.Controllers;
 
 [ApiController]
+[Route("cyclecount")]
 public class CountCompletedController : ControllerBase
 {
     private readonly CycleCountService _service;

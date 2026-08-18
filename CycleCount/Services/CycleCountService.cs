@@ -1,7 +1,7 @@
 ﻿using CycleCount.Configuration;
 using CycleCount.Models;
-using MySqlConnector;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using PrismExtensionServices.Shared;
 
 namespace CycleCount.Services
@@ -14,13 +14,15 @@ namespace CycleCount.Services
 
         public CycleCountService(IDbHelper db, CycleCountConfig config, ILogger<CycleCountService> logger)
         {
-            _db = db;
+            _db     = db;
             _config = config;
             _logger = logger;
         }
 
+
         public async Task<List<CycleCountItem>> GetRandomItems(long storeSid)
         {
+
             List<CycleCountItem> items = new();
 
             using var conn = _db.GetConnection();
@@ -81,24 +83,27 @@ namespace CycleCount.Services
         public async Task<bool> SaveCycleCount(List<CycleCountItem> items)
         {
 
-            try {
                 if (items.Count == 0)
                     return false;
 
-                if (items.Select(i => i.StoreSid).Distinct().Count() > 1)
-                    throw new InvalidOperationException("All items must belong to the same store.");
+                try {
+                    if (items.Count == 0)
+                        return false;
 
-                using var conn = _db.GetConnection();
-                await conn.OpenAsync();
+                    if (items.Select(i => i.StoreSid).Distinct().Count() > 1)
+                        throw new InvalidOperationException("All items must belong to the same store.");
 
-                using (var trn = await conn.BeginTransactionAsync()) {
+                    using var conn = _db.GetConnection();
+                    await conn.OpenAsync();
 
-                    try {
+                    using (var trn = await conn.BeginTransactionAsync()) {
 
-                        // Check if we have one already & quit if so:
-                        using (var cmd = conn.CreateCommand()) {
-                            cmd.Transaction = trn;
-                            cmd.CommandText = @$"
+                        try {
+
+                            // Check if we have one already & quit if so:
+                            using (var cmd = conn.CreateCommand()) {
+                                cmd.Transaction = trn;
+                                cmd.CommandText = @$"
                                                 SELECT 
                                                     EXISTS(
                                                             SELECT 1 FROM rpsods.cyclecounts 
@@ -107,16 +112,16 @@ namespace CycleCount.Services
                                                                 and count_date = CURRENT_DATE()
                                                     ) as count_exists
                                                 ";
-                            var result = await cmd.ExecuteScalarAsync();
-                            if (result != null && result != DBNull.Value && Convert.ToInt32(result) == 1)
-                                return false;
-                        }
+                                var result = await cmd.ExecuteScalarAsync();
+                                if (result != null && result != DBNull.Value && Convert.ToInt32(result) == 1)
+                                    return false;
+                            }
 
 
 
-                        // Save the counts:
-                        using (var cmd = conn.CreateCommand()) {
-                            cmd.CommandText = @"
+                            // Save the counts:
+                            using (var cmd = conn.CreateCommand()) {
+                                cmd.CommandText = @"
                                                 INSERT INTO cyclecounts
                                                 (
                                                     item_sid,
@@ -136,47 +141,47 @@ namespace CycleCount.Services
                                                     @count_date
                                                 )
                                     ";
-                            cmd.Parameters.Add("@item_sid", MySqlDbType.Int64);
-                            cmd.Parameters.Add("@store_sid", MySqlDbType.Int64);
-                            cmd.Parameters.Add("@alu", MySqlDbType.VarChar, 50);
-                            cmd.Parameters.Add("@counted_qty", MySqlDbType.Decimal, 18);
-                            cmd.Parameters.Add("@system_qty", MySqlDbType.Decimal, 18);
-                            cmd.Parameters.Add("@count_date", MySqlDbType.Date);
-                            cmd.Transaction = trn;
+                                cmd.Parameters.Add("@item_sid", MySqlDbType.Int64);
+                                cmd.Parameters.Add("@store_sid", MySqlDbType.Int64);
+                                cmd.Parameters.Add("@alu", MySqlDbType.VarChar, 50);
+                                cmd.Parameters.Add("@counted_qty", MySqlDbType.Decimal, 18);
+                                cmd.Parameters.Add("@system_qty", MySqlDbType.Decimal, 18);
+                                cmd.Parameters.Add("@count_date", MySqlDbType.Date);
+                                cmd.Transaction = trn;
 
-                            await cmd.PrepareAsync();
-                            foreach (var item in items) {
+                                await cmd.PrepareAsync();
+                                foreach (var item in items) {
 
-                                cmd.Parameters["@item_sid"].Value = item.ItemSid;
-                                cmd.Parameters["@store_sid"].Value = item.StoreSid;
-                                cmd.Parameters["@alu"].Value = item.ALU;
-                                cmd.Parameters["@counted_qty"].Value = item.CountedQty;
-                                cmd.Parameters["@system_qty"].Value = item.SystemQty;
-                                cmd.Parameters["@count_date"].Value = DateTime.Today;
+                                    cmd.Parameters["@item_sid"].Value = item.ItemSid;
+                                    cmd.Parameters["@store_sid"].Value = item.StoreSid;
+                                    cmd.Parameters["@alu"].Value = item.ALU;
+                                    cmd.Parameters["@counted_qty"].Value = item.CountedQty;
+                                    cmd.Parameters["@system_qty"].Value = item.SystemQty;
+                                    cmd.Parameters["@count_date"].Value = DateTime.Today;
 
-                                _ = await cmd.ExecuteNonQueryAsync();
-                                //var rows = await cmd.ExecuteNonQueryAsync();
+                                    _ = await cmd.ExecuteNonQueryAsync();
+                                    //var rows = await cmd.ExecuteNonQueryAsync();
+                                }
                             }
+
+                            await trn.CommitAsync();
+                            return true;
+
                         }
-
-                        await trn.CommitAsync();
-                        return true;
-
-                    }
-                    catch (Exception ex) {
-                        //Utilities.LogError("SaveCycleCount()", ex);
-                        _logger.LogError(ex, "SaveCycleCount()");
-                        await trn.RollbackAsync();
-                        return false;
+                        catch (Exception ex) {
+                            //Utilities.LogError("SaveCycleCount()", ex);
+                            _logger.LogError(ex, "SaveCycleCount()");
+                            await trn.RollbackAsync();
+                            return false;
+                        }
                     }
                 }
+                catch (Exception ex) {
+                    //Utilities.LogError("SaveCycleCount()", ex);
+                    _logger.LogError(ex, "SaveCycleCount()");
+                    return false;
+                }
             }
-            catch (Exception ex) {
-                //Utilities.LogError("SaveCycleCount()", ex);
-                _logger.LogError(ex, "SaveCycleCount()");
-                return false;
-            }
-        }
 
         public async Task<bool> HasCountBeenCompletedToday(long storeSid)
         {

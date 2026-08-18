@@ -17,7 +17,7 @@
 
   <Target Name="CopyToHostPlugins" AfterTargets="Build">
     <PropertyGroup>
-      <HostPluginsDir>$(MSBuildThisFileDirectory)..\PrismExtensionServices\bin\$(Configuration)\net10.0-windows\plugins\</HostPluginsDir>
+      <HostPluginsDir>$(MSBuildThisFileDirectory)..\PrismExtensionServices\bin\$(Configuration)\net10.0-windows\plugins\dcspricing\</HostPluginsDir>
     </PropertyGroup>
     <ItemGroup>
       <!-- Copy plugin output but exclude the shared contract assembly — the host already provides it -->

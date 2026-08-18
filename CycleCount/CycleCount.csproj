@@ -1,9 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+		<RazorCompileOnBuild>true</RazorCompileOnBuild>
+		<RazorCompileOnPublish>true</RazorCompileOnPublish>
+		<OutputType>Library</OutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,25 +15,45 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\PrismExtensionServices.Shared\PrismExtensionServices.Shared.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="MySqlConnector" Version="2.6.0" />
+		<PackageReference Include="PpitConfig" Version="1.0.8" />
+		<PackageReference Include="PricePointIT.PrismExtensionServices.Shared" Version="1.0.0" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.9" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Content Include="Installation Notes\CreateTableCycleCounts.Sql" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<Content Update="wwwroot\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
 	<Target Name="CopyToHostPlugins" AfterTargets="Build">
 		<PropertyGroup>
-			<HostPluginsDir>$(MSBuildThisFileDirectory)..\PrismExtensionServices\bin\$(Configuration)\net10.0-windows\plugins\CycleCount\</HostPluginsDir>
+			<HostPluginsDir>$(MSBuildThisFileDirectory)..\PrismExtensionServices\bin\$(Configuration)\net10.0-windows\plugins\cyclecount\</HostPluginsDir>
 		</PropertyGroup>
+
 		<ItemGroup>
-			<PluginOutput Include="$(OutputPath)*.*" Exclude="$(OutputPath)PrismExtensionServices.Shared.*" />
+			<PluginOutput Include="$(OutputPath)*.*"
+						  Exclude="$(OutputPath)PrismExtensionServices.Shared.*" />
+
+			<PluginWwwroot Include="$(OutputPath)wwwroot\**\*" />
 		</ItemGroup>
-		<Copy SourceFiles="@(PluginOutput)" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" />
+
+		<MakeDir Directories="$(HostPluginsDir)" />
+		<MakeDir Directories="$(HostPluginsDir)wwwroot" />
+
+		<Copy SourceFiles="@(PluginOutput)"
+			  DestinationFolder="$(HostPluginsDir)"
+			  SkipUnchangedFiles="true" />
+
+		<Copy SourceFiles="@(PluginWwwroot)"
+			  DestinationFolder="$(HostPluginsDir)wwwroot\%(RecursiveDir)"
+			  SkipUnchangedFiles="true" />
 	</Target>
 
 </Project>
